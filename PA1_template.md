@@ -9,7 +9,8 @@ keep_md: true
 
 Download the zip file, unzip it, and convert the date field to Date class. 
 
-```{r warning=FALSE, message=FALSE}
+
+```r
 library(dplyr)
 
 zipFileName <- "activity.zip"
@@ -27,7 +28,8 @@ activity <- mutate(activity, date = as.Date(date))
 
 Aggregate to total steps per day.
 
-```{r}
+
+```r
 activity %>%
     group_by(date) %>%
     summarise(
@@ -37,7 +39,8 @@ activity %>%
  
 Histogram of number of steps per day.
  
-```{r message=FALSE}
+
+```r
 library(ggplot2)
 
 ggplot(data = activityByDay, aes(steps)) + 
@@ -45,17 +48,31 @@ ggplot(data = activityByDay, aes(steps)) +
     labs(title = "Histogram of Total Steps Taken Each Day")
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
+
 The mean and median number of steps taken each day is available in the output of the `summary` function under the `steps` column:
 
-```{r}
+
+```r
 summary(activityByDay)
+```
+
+```
+##       date                steps      
+##  Min.   :2012-10-01   Min.   :    0  
+##  1st Qu.:2012-10-16   1st Qu.: 6778  
+##  Median :2012-10-31   Median :10395  
+##  Mean   :2012-10-31   Mean   : 9354  
+##  3rd Qu.:2012-11-15   3rd Qu.:12811  
+##  Max.   :2012-11-30   Max.   :21194
 ```
 
 ## What is the average daily activity pattern?
 
 Aggregate to mean steps by 5-min interval.
 
-```{r}
+
+```r
 activity %>% 
     group_by(interval) %>%
     summarise(
@@ -65,37 +82,61 @@ activity %>%
 
 Plot time series of mean number of steps taken by 5-min interval.
 
-```{r}
+
+```r
 ggplot(data = activityByInterval, aes(interval, steps)) +
     geom_line() +
     labs(title = "Mean number of Steps by 5-min Interval")
 ```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+
 
 Calculate which 5-min interval, on average across all the days in the dataset, contains the maximum number of steps.
 
-```{r}
+
+```r
 activityByInterval %>%
     filter(
         min_rank(desc(steps)) == 1
     )
 ```
 
+```
+## Source: local data frame [1 x 2]
+## 
+##   interval    steps
+##      (int)    (dbl)
+## 1      835 206.1698
+```
+
 ## Imputing missing values
     
 Calculate the total number of rows with missing values.
 
-```{r}
+
+```r
 sum(!complete.cases(activity))
+```
+
+```
+## [1] 2304
 ```
 
 We'll use the unsophisticated strategy of replacing NAs with the global median.
 
-```{r}
+
+```r
 stepsMedian <- median(activity$steps, na.rm = TRUE)
 
 print(paste("The global median is:", stepsMedian))
+```
 
+```
+## [1] "The global median is: 0"
+```
+
+```r
 activity %>%
     mutate(
         steps = ifelse(is.na(steps), stepsMedian, steps)
@@ -104,7 +145,8 @@ activity %>%
 
 Aggregate to total steps per day.
 
-```{r}
+
+```r
 activityImputed %>%
     group_by(date) %>%
     summarise(
@@ -114,16 +156,30 @@ activityImputed %>%
 
 Histogram of number of steps per day.
  
-```{r message=FALSE}
+
+```r
 ggplot(data = activityImputedByDay, aes(steps)) + 
     geom_histogram() +
     labs(title = "Histogram of Total Steps Taken Each Day")
 ```
 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
+
 The mean and median number of steps taken each day is available in the output of the `summary` function under the `steps` column:
 
-```{r}
+
+```r
 summary(activityImputedByDay)
+```
+
+```
+##       date                steps      
+##  Min.   :2012-10-01   Min.   :    0  
+##  1st Qu.:2012-10-16   1st Qu.: 6778  
+##  Median :2012-10-31   Median :10395  
+##  Mean   :2012-10-31   Mean   : 9354  
+##  3rd Qu.:2012-11-15   3rd Qu.:12811  
+##  Max.   :2012-11-30   Max.   :21194
 ```
 
 These values, based on the data with missing values imputed, are the same as those originally calculated on the data with missing values.  This happened because we originally used the `sum` function with the option `rm.na = TRUE`.  This behaves as though we imputed a value of 0 to the records with missing values.  But this is exactly what we did with the imputed data set.  We imputed with the global median which is 0. 
@@ -132,7 +188,8 @@ These values, based on the data with missing values imputed, are the same as tho
 
 Aggregate to mean steps by 5-min interval by Weekend/Weekday.
 
-```{r}
+
+```r
 activityImputed %>%
     mutate(
         weekend = factor(ifelse(weekdays(date) %in% 
@@ -146,10 +203,13 @@ activityImputed %>%
 
 Panel plot of mean steps by 5-min interval by Weekend/Weekday.
 
-```{r}
+
+```r
 ggplot(data = activityImputedByWeekendInterval, aes(interval, steps)) +
     geom_line() + 
     facet_grid(weekend ~ .) +
     labs(y = "Number of Steps") +
     labs(title = "Mean steps by 5-min Interval by Weekend/Weekday")
 ```
+
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
